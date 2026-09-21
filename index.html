@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>里程計算機：滙豐旅人卡 vs 國泰 CUBE 卡</title>
+<meta name="description" content="輸入消費金額，一眼看出刷滙豐旅人卡還是國泰 CUBE 卡換到的里程比較多。">
+<meta property="og:title" content="里程計算機：滙豐旅人卡 vs 國泰 CUBE 卡">
+<meta property="og:description" content="輸入消費金額，一眼看出刷哪張卡里程比較多。">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E✈️%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<style>
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  --bg: #eef1f5;
+  --surface: #ffffff;
+  --ink: #16202e;
+  --muted: #5d6b7e;
+  --line: #d6dce5;
+  --hsbc: #c8102e;
+  --hsbc-soft: #fbe6ea;
+  --cube: #00806b;
+  --cube-soft: #dcf2ec;
+  --accent: #16202e;
+  --win: #f2b705;
+  --on: #ffffff;
+  --num: "Bricolage Grotesque", "Noto Sans TC", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1520; --surface: #182130; --ink: #eaf0f7; --muted: #94a3b8; --line: #2b384b;
+    --hsbc: #ff5a72; --hsbc-soft: #3a1c25; --cube: #2fd0b0; --cube-soft: #12362f; --accent: #eaf0f7; --on: #0f1520;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1520; --surface: #182130; --ink: #eaf0f7; --muted: #94a3b8; --line: #2b384b;
+  --hsbc: #ff5a72; --hsbc-soft: #3a1c25; --cube: #2fd0b0; --cube-soft: #12362f; --accent: #eaf0f7; --on: #0f1520;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: "Noto Sans TC", system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+  line-height: 1.6; -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 56px; }
+h1 { font-size: 1.5rem; margin: 0 0 4px; font-weight: 700; letter-spacing: .01em; }
+.sub { color: var(--muted); margin: 0 0 20px; font-size: .95rem; }
+
+.tabs { display: flex; gap: 4px; background: var(--line); padding: 4px; border-radius: 12px; margin-bottom: 16px; }
+.tabs button {
+  flex: 1; font-size: .92rem; line-height: 1.3; border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 500;
+  padding: 10px 8px; border-radius: 9px; cursor: pointer; min-height: 44px;
+}
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
+label.field { display: block; font-weight: 500; margin-bottom: 6px; font-size: .95rem; }
+.input-row { display: flex; align-items: center; border: 2px solid var(--line); border-radius: 10px; background: var(--bg); padding: 0 12px; }
+.input-row:focus-within { border-color: var(--accent); }
+.input-row span { color: var(--muted); font-weight: 500; }
+.input-row input {
+  flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink);
+  font: 700 1.6rem var(--num); padding: 10px 8px; outline: none;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.chip {
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: .9rem;
+  padding: 8px 14px; border-radius: 999px; cursor: pointer; min-height: 40px;
+}
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.chip:focus-visible, .tabs button:focus-visible, summary:focus-visible { outline: 3px solid var(--win); outline-offset: 2px; }
+.group { margin-top: 18px; }
+.seg { display: flex; gap: 8px; }
+.seg .chip { flex: 1; border-radius: 10px; }
+.custom { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); border-radius: 999px; padding: 0 12px; min-height: 40px; }
+.custom input { width: 56px; border: 0; background: transparent; color: var(--ink); font: 500 .95rem inherit; font-family: inherit; outline: none; text-align: right; }
+.custom.active { border-color: var(--accent); }
+
+/* boarding-pass style result cards */
+.passes { display: grid; gap: 14px; margin-bottom: 16px; }
+.pass { display: grid; grid-template-columns: 1fr auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; position: relative; }
+.pass .main { padding: 16px 18px; border-left: 8px solid var(--c); }
+.pass .stub { padding: 16px 16px; border-left: 2px dashed var(--line); background: var(--soft); display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 116px; text-align: center; }
+.pass.hsbc { --c: var(--hsbc); --soft: var(--hsbc-soft); }
+.pass.cube { --c: var(--cube); --soft: var(--cube-soft); }
+.pass.cash { --c: var(--ink); --soft: var(--bg); }
+.pass .detail { color: var(--muted); font-size: .85rem; margin: 6px 0 0; }
+.pass .name { font-weight: 700; color: var(--c); margin: 0; }
+.pass .rule { color: var(--muted); font-size: .85rem; margin: 0 0 8px; }
+.pass .miles { font: 800 2.6rem/1.05 var(--num); margin: 0; }
+.pass .miles small { font: 500 .9rem "Noto Sans TC", sans-serif; color: var(--muted); margin-left: 4px; }
+.pass .stub .k { font-size: .8rem; color: var(--muted); }
+.pass .stub .v { font: 800 1.5rem var(--num); color: var(--c); }
+.pass.winner { border-color: var(--win); box-shadow: 0 0 0 2px var(--win); }
+.crown { position: absolute; top: 10px; right: 10px; background: var(--win); color: #3a2c00; font-weight: 700; font-size: .78rem; padding: 2px 10px; border-radius: 999px; }
+.pass .stub { position: relative; }
+.verdict { padding: 18px 18px; border-radius: 14px; background: var(--accent); color: var(--bg); margin-bottom: 14px; }
+.verdict.h { background: var(--hsbc); color: var(--on); }
+.verdict.c { background: var(--cube); color: var(--on); }
+.verdict .big { font-size: 1.45rem; font-weight: 700; line-height: 1.35; margin: 0; }
+.verdict .why { margin: 6px 0 0; font-size: .95rem; opacity: .95; }
+.verdict b { font-weight: 700; }
+
+h2 { font-size: 1.05rem; margin: 0 0 4px; }
+.hint { color: var(--muted); font-size: .88rem; margin: 0 0 12px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 440px; font-size: .92rem; }
+th, td { padding: 9px 8px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { color: var(--muted); font-weight: 500; font-size: .85rem; }
+td.num { font-family: var(--num); font-weight: 600; }
+tr.cur td { background: var(--cube-soft); }
+.good { color: var(--cube); font-weight: 700; }
+.bad { color: var(--hsbc); font-weight: 700; }
+
+details { margin-top: 4px; }
+summary { cursor: pointer; font-weight: 500; padding: 8px 0; min-height: 44px; display: flex; align-items: center; }
+.settings { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 6px; }
+.settings label { font-size: .85rem; color: var(--muted); display: block; margin-bottom: 4px; }
+.settings select, .settings input { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: 500 1rem "Noto Sans TC", sans-serif; }
+.foot { color: var(--muted); font-size: .8rem; margin-top: 20px; }
+.hidden { display: none; }
+.sec { border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+.sec h3 { font-size: .98rem; margin: 0 0 10px; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.f label { display: block; font-size: .9rem; font-weight: 500; margin-bottom: 4px; }
+.f input { width: 100%; padding: 10px 10px; border: 2px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: 700 1.15rem var(--num); }
+.f input:focus { outline: none; border-color: var(--accent); }
+.note { display: block; color: var(--muted); font-size: .82rem; margin-top: 4px; }
+
+.mvbox { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+@media (max-width: 460px) {
+  .pass { grid-template-columns: 1fr; }
+  .pass .stub { border-left: 0; border-top: 2px dashed var(--line); flex-direction: row; gap: 10px; justify-content: space-between; }
+  .pass .miles { font-size: 2.2rem; }
+  .crown { top: 8px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .miles, .verdict { transition: opacity .15s; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>里程計算機</h1>
+  <p class="sub">滙豐旅人卡 vs 國泰 CUBE 卡，這筆刷哪張換到的里程比較多。</p>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-spend" aria-selected="true" data-mode="spend">刷多少 → 幾里</button>
+    <button role="tab" id="tab-goal" aria-selected="false" data-mode="goal">要幾里 → 刷多少</button>
+    <button role="tab" id="tab-promo" aria-selected="false" data-mode="promo">百貨活動比較</button>
+  </div>
+
+  <div class="panel">
+    <div id="spendField">
+      <label class="field" for="amount">消費金額</label>
+      <div class="input-row"><span>NT$</span><input id="amount" type="number" inputmode="decimal" min="0" value="10000"></div>
+      <div class="chips" id="amountChips">
+        <button class="chip" data-v="1000">1,000</button>
+        <button class="chip" data-v="5000">5,000</button>
+        <button class="chip" data-v="10000">10,000</button>
+        <button class="chip" data-v="30000">30,000</button>
+        <button class="chip" data-v="100000">100,000</button>
+      </div>
+    </div>
+    <div id="goalField" class="hidden">
+      <label class="field" for="goal">目標里程</label>
+      <div class="input-row"><span>哩</span><input id="goal" type="number" inputmode="decimal" min="0" value="25000"></div>
+      <div class="chips" id="goalChips">
+        <button class="chip" data-v="10000">10,000</button>
+        <button class="chip" data-v="25000">25,000</button>
+        <button class="chip" data-v="40000">40,000</button>
+        <button class="chip" data-v="80000">80,000</button>
+      </div>
+    </div>
+
+    <div id="promoField" class="hidden">
+      <p class="hint" style="margin-bottom:14px">比較「現金付款」和「刷卡付款＋拿禮券＋累里程」，哪個實際花得比較少。百貨消費以國內規則計算。</p>
+
+      <div class="sec">
+        <h3>兩種付法，各要付多少</h3>
+        <div class="pair">
+          <div class="f"><label for="pAmount">刷卡價／原價（NT$）</label><input id="pAmount" type="number" inputmode="decimal" value="10000" min="0"><span class="note">用信用卡付的金額</span></div>
+          <div class="f"><label for="pCash">現金價（NT$）</label><input id="pCash" type="number" inputmode="decimal" value="9500" min="0"><span class="note">現金付款的總價</span></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h3>刷卡有什麼活動</h3>
+        <div class="chips" id="promoChips" role="group" aria-label="常見刷卡活動" style="margin:0 0 12px">
+          <button class="chip" data-thr="10000" data-v="1000" aria-pressed="true">滿萬送 1,000</button>
+          <button class="chip" data-thr="5000" data-v="500" aria-pressed="false">滿 5,000 送 500</button>
+          <button class="chip" data-thr="custom" aria-pressed="false">其他（自己填）</button>
+        </div>
+        <div class="pair">
+          <div class="f"><label for="pThr">刷卡滿（NT$）</label><input id="pThr" type="number" inputmode="decimal" value="10000" min="1"></div>
+          <div class="f"><label for="pVoucher">送禮券（NT$）</label><input id="pVoucher" type="number" inputmode="decimal" value="1000" min="0"><span class="note">覺得用不完，就填打折後的金額</span></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h3>送的方式</h3>
+        <div class="seg" id="repChips" role="group" aria-label="送的方式">
+          <button class="chip" data-rep="each" aria-pressed="true">每滿就送</button>
+          <button class="chip" data-rep="once" aria-pressed="false">只送一次</button>
+        </div>
+        <input type="hidden" id="pRepeat" value="each">
+        <p class="note" id="repNote" style="margin:10px 0 0"></p>
+      </div>
+
+      <div class="mvbox">
+        <label class="field" id="mvLabel">1 里程值多少（NT$）：用長榮機票換算</label>
+        <div class="chips" id="mvChips" role="group" aria-labelledby="mvLabel" style="margin-top:0">
+          <button class="chip" data-mv="japan" aria-pressed="true">日本方案</button>
+          <button class="chip" data-mv="bali" aria-pressed="false">峇里島方案</button>
+          <button class="chip" data-mv="munich" aria-pressed="false">慕尼黑商務艙</button>
+          <button class="chip" data-mv="custom" aria-pressed="false">自訂</button>
+        </div>
+        <p class="hint" id="mvExplain" style="margin-top:10px"></p>
+        <div id="mvPresetBox">
+          <details>
+            <summary>調整機票價與稅費</summary>
+            <div class="settings">
+              <div><label for="mFare">機票價（NT$，幾個人就填合計）</label><input id="mFare" type="number" inputmode="decimal" min="0"></div>
+              <div><label for="mTax">酬賓票要另付的稅費（NT$）</label><input id="mTax" type="number" inputmode="decimal" min="0"></div>
+              <div><label for="mMiles">需要幾里（人數合計）</label><input id="mMiles" type="number" inputmode="decimal" min="1"></div>
+            </div>
+            <p class="hint" style="margin-top:8px">機票價取自長榮官網 2026/9 查到的近期低價（台北→東京／大阪約 1.55～1.75 萬，台北→峇里島約 1.46～1.68 萬），不是旺季價。稅費是估算：燃油附加費與機場稅約 2,800 元，再加訂位服務費 USD 33。慕尼黑商務艙方案是 2 人合計 NT$400,000、300,000 里（每人來回商務艙 150,000 里），稅費預設 0，請自行填入實際開票的稅費。遇到連假、寒暑假機票貴很多時，把機票價改高，里程就會更值錢，但酬賓機位也更難訂。</p>
+          </details>
+        </div>
+        <div id="mvCustomBox" class="hidden">
+          <div class="settings"><div><label for="pMv">1 里程值（NT$）</label><input id="pMv" type="number" inputmode="decimal" value="0.5" min="0" step="0.05"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="group" id="scopeGroup">
+      <label class="field" id="scopeLabel">消費地點（影響旅人卡的換算）</label>
+      <div class="seg" role="group" aria-labelledby="scopeLabel">
+        <button class="chip" data-scope="dom" aria-pressed="true">國內</button>
+        <button class="chip" data-scope="over" aria-pressed="false">國外</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <label class="field" id="rateLabel">CUBE 卡這筆的小樹點回饋率</label>
+      <div class="chips" id="rateChips" role="group" aria-labelledby="rateLabel" style="margin-top:0">
+        <button class="chip" data-rate="3.3" aria-pressed="true">3.3%</button>
+        <button class="chip" data-rate="2" aria-pressed="false">2%</button>
+        <button class="chip" data-rate="0.3" aria-pressed="false">0.3%</button>
+        <span class="custom" id="customWrap">自訂 <input id="customRate" type="number" inputmode="decimal" step="0.1" min="0" placeholder="3.8"> %</span>
+      </div>
+    </div>
+
+    <details>
+      <summary>換算規則（可自行修改）</summary>
+      <div class="settings">
+        <div><label for="hDom">旅人卡・國內：NT$ / 1 里</label><input id="hDom" type="number" inputmode="decimal" value="18" min="0.1" step="0.1"></div>
+        <div><label for="hOver">旅人卡・國外：NT$ / 1 里</label><input id="hOver" type="number" inputmode="decimal" value="10" min="0.1" step="0.1"></div>
+        <div><label for="pts">CUBE：小樹點</label><input id="pts" type="number" inputmode="decimal" value="360" min="1"></div>
+        <div><label for="mi">= 里程</label><input id="mi" type="number" inputmode="decimal" value="1000" min="1"></div>
+      </div>
+    </details>
+  </div>
+
+  <div id="verdict" class="verdict" aria-live="polite"></div>
+  <div id="passes" class="passes" aria-live="polite"></div>
+
+  <div class="panel">
+    <h2>CUBE 各回饋率的換算行情</h2>
+    <p class="hint">數字是「刷多少 NT$ 換 1 里程」，越低越划算。</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>CUBE 回饋率</th><th>NT$ / 1 里</th><th>對比旅人卡・國內</th><th>對比旅人卡・國外</th></tr></thead>
+        <tbody id="tbl"></tbody>
+      </table>
+    </div>
+    <p class="hint" id="breakeven" style="margin-top:12px"></p>
+  </div>
+
+  <p class="foot">本工具僅供參考，非銀行官方資訊。計算以預設或你填入的規則為準，里程以未四捨五入的數值比較。禮券的使用門檻與期限、百貨活動是否限定指定卡或排除部分品項，也請看活動辦法。實際的小樹點入帳、換里程的單位與手續費、回饋上限與加碼活動，請以銀行公告為準。</p>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { mode: 'spend', scope: 'dom', rate: 3.3, custom: false };
+  var presets = {
+    japan: { name: '日本方案', fare: 16500, tax: 3800, miles: 35000 },
+    bali:  { name: '峇里島方案', fare: 15000, tax: 3800, miles: 35000 },
+    munich: { name: '慕尼黑商務艙（2 人）', fare: 400000, tax: 0, miles: 300000 }
+  };
+  var mvMode = 'japan';
+
+  function num(id, fallback) {
+    var v = parseFloat($(id).value);
+    return isFinite(v) && v >= 0 ? v : fallback;
+  }
+  function fmt(n, d) {
+    if (!isFinite(n)) return '—';
+    return n.toLocaleString('zh-TW', { maximumFractionDigits: d === undefined ? 1 : d, minimumFractionDigits: 0 });
+  }
+  function mvValue() {
+    if (mvMode === 'custom') return num('pMv', 0.5);
+    var p = presets[mvMode];
+    return Math.max(p.fare - p.tax, 0) / Math.max(p.miles, 1);
+  }
+  function updateMv() {
+    var t;
+    if (mvMode === 'custom') t = '自己設定：1 里 ≈ NT$' + fmt(mvValue(), 2);
+    else {
+      var p = presets[mvMode];
+      t = p.name + '：機票 NT$' + fmt(p.fare, 0) + ' − 稅費 NT$' + fmt(p.tax, 0) + ' = NT$' + fmt(Math.max(p.fare - p.tax, 0), 0) +
+          '，÷ ' + fmt(p.miles, 0) + ' 里 ≈ <b>NT$' + fmt(mvValue(), 2) + ' / 里</b>';
+    }
+    $('mvExplain').innerHTML = t;
+  }
+  function syncPromoChips() {
+    var t = num('pThr', 0), v = num('pVoucher', 0), hit = false;
+    var chips = document.querySelectorAll('#promoChips .chip');
+    chips.forEach(function (b) {
+      if (b.dataset.thr === 'custom') return;
+      var on = parseFloat(b.dataset.thr) === t && parseFloat(b.dataset.v) === v;
+      if (on) hit = true;
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    chips.forEach(function (b) { if (b.dataset.thr === 'custom') b.setAttribute('aria-pressed', hit ? 'false' : 'true'); });
+  }
+  function cfg() {
+    var pts = Math.max(num('pts', 360), 1), mi = num('mi', 1000);
+    return {
+      hDom: Math.max(num('hDom', 18), 0.0001),
+      hOver: Math.max(num('hOver', 10), 0.0001),
+      milesPerPoint: mi / pts
+    };
+  }
+  // NT$ needed per mile
+  function hsbcCost(c) { return state.scope === 'dom' ? c.hDom : c.hOver; }
+  function cubeCost(c, rate) { return rate > 0 ? 1 / (rate / 100 * c.milesPerPoint) : Infinity; }
+
+  function pass(cls, name, rule, big, unit, k, v, win) {
+    return '<div class="pass ' + cls + (win ? ' winner' : '') + '">' +
+      (win ? '<span class="crown">最划算</span>' : '') +
+      '<div class="main"><p class="name">' + name + '</p><p class="rule">' + rule + '</p>' +
+      '<p class="miles">' + big + '<small>' + unit + '</small></p></div>' +
+      '<div class="stub"><span class="k">' + k + '</span><span class="v">' + v + '</span></div></div>';
+  }
+
+  function render() {
+    var c = cfg();
+    updateMv();
+    syncPromoChips();
+    var rate = state.rate;
+    var hc = hsbcCost(c), cc = cubeCost(c, rate);
+    var scopeName = state.scope === 'dom' ? '國內' : '國外';
+    var hRule = scopeName + ' NT$' + fmt(hc, 2) + ' = 1 里';
+    var cRule = '回饋 ' + fmt(rate, 2) + '% 小樹點 → ' + fmt(cc, 2) + ' 元 = 1 里';
+    var html, verdict, vcls = '';
+
+    if (state.mode === 'spend') {
+      var amt = num('amount', 0);
+      var hm = amt / hc, cm = amt / cc;
+      var win = Math.abs(hm - cm) < 1e-9 ? '' : (hm > cm ? 'h' : 'c');
+      html = pass('hsbc', '滙豐旅人卡', hRule, fmt(hm), '里', '每里成本', 'NT$' + fmt(hc, 2), win === 'h') +
+             pass('cube', '國泰 CUBE 卡', cRule, fmt(cm), '里', '每里成本', 'NT$' + fmt(cc, 2), win === 'c');
+      if (!win) verdict = '<p class="big">兩張一樣，刷哪張都可以</p>';
+      else {
+        var diff = Math.abs(hm - cm), best = win === 'h' ? '滙豐旅人卡' : '國泰 CUBE 卡';
+        vcls = win;
+        verdict = '<p class="big">' + scopeName + '消費，刷' + best + '比較划算</p>' +
+                  '<p class="why">NT$' + fmt(amt, 0) + ' 多拿 <b>' + fmt(diff) + ' 里</b>（' + fmt(Math.max(hm, cm)) + ' 里 vs ' + fmt(Math.min(hm, cm)) + ' 里）</p>';
+      }
+    } else if (state.mode === 'promo') {
+      var pa = num('pAmount', 0), cashPrice = num('pCash', 0);
+      var thr = Math.max(num('pThr', 10000), 1), voucher = num('pVoucher', 0);
+      var mv = mvValue();
+      var times = pa >= thr ? ($('pRepeat').value === 'each' ? Math.floor(pa / thr) : 1) : 0;
+      var coupon = times * voucher;
+      $('repNote').textContent = ($('pRepeat').value === 'each' ? '每滿就送：' : '只送一次：') + '刷 NT$' + fmt(pa, 0) + ' 可拿 ' + times + ' 份，共 NT$' + fmt(coupon, 0) + ' 禮券。';
+      var hM = pa / c.hDom, cM = pa / cc;
+      var opts = [
+        { key: 'cash', name: '現金付款', net: cashPrice },
+        { key: 'hsbc', name: '滙豐旅人卡', net: pa - coupon - hM * mv },
+        { key: 'cube', name: '國泰 CUBE 卡', net: pa - coupon - cM * mv }
+      ];
+      var top = opts[0];
+      opts.forEach(function (o) { if (o.net < top.net - 1e-9) top = o; });
+      var sorted = opts.slice().sort(function (a, b) { return a.net - b.net; });
+      var tie = Math.abs(sorted[0].net - sorted[1].net) < 1e-9;
+      var cardDetail = function (m) {
+        return '<p class="detail">送禮券 NT$' + fmt(coupon, 0) + ' ＋ ' + fmt(m) + ' 里（估值 NT$' + fmt(m * mv, 0) + '）</p>';
+      };
+      var mk = function (o, cls, rule, extra, m) {
+        return '<div class="pass ' + cls + (top === o && !tie ? ' winner' : '') + '">' +
+          (top === o && !tie ? '<span class="crown">最划算</span>' : '') +
+          '<div class="main"><p class="name">' + o.name + '</p><p class="rule">' + rule + '</p>' +
+          '<p class="miles">' + fmt(o.net, 0) + '<small>元 實際成本</small></p>' + extra + '</div>' +
+          '<div class="stub"><span class="k">比原價省</span><span class="v">NT$' + fmt(pa - o.net, 0) + '</span></div></div>';
+      };
+      html = mk(opts[0], 'cash', '現金價 NT$' + fmt(cashPrice, 0) + '（比刷卡價少 NT$' + fmt(pa - cashPrice, 0) + '）', '<p class="detail">沒有里程也沒有禮券</p>') +
+             mk(opts[1], 'hsbc', '刷 NT$' + fmt(pa, 0) + '，國內 ' + fmt(c.hDom, 2) + ' 元 = 1 里', cardDetail(hM)) +
+             mk(opts[2], 'cube', '刷 NT$' + fmt(pa, 0) + '，回饋 ' + fmt(rate, 2) + '% → ' + fmt(cc, 2) + ' 元 = 1 里', cardDetail(cM));
+      if (tie) verdict = '<p class="big">幾個選項一樣，選你方便的</p>';
+      else {
+        vcls = top.key === 'hsbc' ? 'h' : (top.key === 'cube' ? 'c' : '');
+        var saveMore = sorted[1].net - sorted[0].net;
+        var bestM = Math.max(hM, cM), gap = pa - coupon - cashPrice;
+        var be;
+        if (gap <= 0) be = '禮券本身就已經讓刷卡比現金價便宜，里程是額外賺的。';
+        else if (bestM <= 0) be = '';
+        else be = '刷卡要 1 里程值 <b>NT$' + fmt(gap / bestM, 2) + '</b> 以上才贏現金價（你設的是 NT$' + fmt(mv, 2) + '）。';
+        verdict = '<p class="big">' + top.name + '最划算</p>' +
+                  '<p class="why">比第二名（' + sorted[1].name + '）多省 <b>NT$' + fmt(saveMore, 0) + '</b>。' + be + '</p>';
+      }
+    } else {
+      var goal = num('goal', 0);
+      var hs = goal * hc, cs = goal * cc;
+      var w = Math.abs(hs - cs) < 1e-9 ? '' : (hs < cs ? 'h' : 'c');
+      html = pass('hsbc', '滙豐旅人卡', hRule, fmt(hs, 0), '元', '每里成本', 'NT$' + fmt(hc, 2), w === 'h') +
+             pass('cube', '國泰 CUBE 卡', cRule, fmt(cs, 0), '元', '每里成本', 'NT$' + fmt(cc, 2), w === 'c');
+      if (!w) verdict = '<p class="big">兩張一樣，刷哪張都可以</p>';
+      else {
+        var b = w === 'h' ? '滙豐旅人卡' : '國泰 CUBE 卡';
+        vcls = w;
+        verdict = '<p class="big">' + scopeName + '消費，刷' + b + '比較划算</p>' +
+                  '<p class="why">湊 ' + fmt(goal, 0) + ' 里少刷 <b>NT$' + fmt(Math.abs(hs - cs), 0) + '</b></p>';
+      }
+    }
+    $('passes').innerHTML = html;
+    $('verdict').className = 'verdict ' + vcls;
+    $('verdict').innerHTML = verdict;
+
+    // rate table
+    var rates = [0.3, 1, 2, 2.5, 3, 3.3, 3.8, 5];
+    if (rates.indexOf(rate) === -1 && rate > 0) { rates.push(rate); rates.sort(function (a, b) { return a - b; }); }
+    var rows = rates.map(function (r) {
+      var cost = cubeCost(c, r);
+      var vsDom = cost < c.hDom - 1e-9 ? '<span class="good">CUBE 較划算</span>' : (Math.abs(cost - c.hDom) < 1e-9 ? '打平' : '<span class="bad">旅人卡較划算</span>');
+      var vsOver = cost < c.hOver - 1e-9 ? '<span class="good">CUBE 較划算</span>' : (Math.abs(cost - c.hOver) < 1e-9 ? '打平' : '<span class="bad">旅人卡較划算</span>');
+      return '<tr' + (r === rate ? ' class="cur"' : '') + '><td>' + fmt(r, 2) + '%</td><td class="num">' + fmt(cost, 2) + '</td><td>' + vsDom + '</td><td>' + vsOver + '</td></tr>';
+    });
+    $('tbl').innerHTML = rows.join('');
+
+    // break-even rates
+    var beDom = 100 / (c.hDom * c.milesPerPoint), beOver = 100 / (c.hOver * c.milesPerPoint);
+    $('breakeven').innerHTML = '打平點：CUBE 回饋率要超過 <b>' + fmt(beDom, 2) + '%</b> 才贏過旅人卡國內，超過 <b>' + fmt(beOver, 2) + '%</b> 才贏過旅人卡國外。';
+  }
+
+  // events
+  document.querySelectorAll('.tabs button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.mode = b.dataset.mode;
+      document.querySelectorAll('.tabs button').forEach(function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
+      $('spendField').classList.toggle('hidden', state.mode !== 'spend');
+      $('goalField').classList.toggle('hidden', state.mode !== 'goal');
+      $('promoField').classList.toggle('hidden', state.mode !== 'promo');
+      $('scopeGroup').classList.toggle('hidden', state.mode === 'promo');
+      render();
+    });
+  });
+  function bindChips(id, target) {
+    $(id).addEventListener('click', function (e) {
+      var b = e.target.closest('.chip'); if (!b) return;
+      $(target).value = b.dataset.v; render();
+    });
+  }
+  bindChips('amountChips', 'amount');
+  bindChips('goalChips', 'goal');
+  document.querySelectorAll('[data-scope]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.scope = b.dataset.scope;
+      document.querySelectorAll('[data-scope]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      render();
+    });
+  });
+  function setRateChips() {
+    document.querySelectorAll('[data-rate]').forEach(function (x) {
+      x.setAttribute('aria-pressed', !state.custom && parseFloat(x.dataset.rate) === state.rate ? 'true' : 'false');
+    });
+    $('customWrap').classList.toggle('active', state.custom);
+  }
+  document.querySelectorAll('[data-rate]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.rate = parseFloat(b.dataset.rate); state.custom = false; $('customRate').value = '';
+      setRateChips(); render();
+    });
+  });
+  $('customRate').addEventListener('input', function () {
+    var v = parseFloat(this.value);
+    if (isFinite(v) && v >= 0) { state.rate = v; state.custom = true; } 
+    setRateChips(); render();
+  });
+  ['amount', 'goal', 'hDom', 'hOver', 'pts', 'mi', 'pAmount', 'pCash', 'pThr', 'pVoucher', 'pRepeat', 'pMv'].forEach(function (id) { $(id).addEventListener('input', render); });
+
+  $('promoChips').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b) return;
+    if (b.dataset.thr !== 'custom') { $('pThr').value = b.dataset.thr; $('pVoucher').value = b.dataset.v; render(); }
+    else { $('pThr').focus(); }
+  });
+  $('repChips').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b) return;
+    $('pRepeat').value = b.dataset.rep;
+    document.querySelectorAll('#repChips .chip').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    render();
+  });
+  function loadPreset() {
+    var custom = mvMode === 'custom';
+    $('mvPresetBox').classList.toggle('hidden', custom);
+    $('mvCustomBox').classList.toggle('hidden', !custom);
+    if (!custom) {
+      var p = presets[mvMode];
+      $('mFare').value = p.fare; $('mTax').value = p.tax; $('mMiles').value = p.miles;
+    }
+  }
+  $('mvChips').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b) return;
+    mvMode = b.dataset.mv;
+    document.querySelectorAll('#mvChips .chip').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    loadPreset(); render();
+  });
+  ['mFare', 'mTax', 'mMiles'].forEach(function (id) {
+    $(id).addEventListener('input', function () {
+      if (mvMode === 'custom') return;
+      var p = presets[mvMode];
+      p.fare = num('mFare', 0); p.tax = num('mTax', 0); p.miles = Math.max(num('mMiles', 35000), 1);
+      render();
+    });
+  });
+  loadPreset();
+  render();
+})();
+</script>
+</body>
+</html>
